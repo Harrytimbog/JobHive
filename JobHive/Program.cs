@@ -1,4 +1,13 @@
+using JobHive.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("Database"); // check if the connection string is correct for testing
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Database"));
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
