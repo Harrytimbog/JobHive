@@ -1,3 +1,4 @@
+using JobHive.Constants;
 using JobHive.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -31,19 +32,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Seeding roles with a separate DbContext instance
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-
-    if (!roleManager.RoleExistsAsync("Admin").Result)
-    {
-        var result = roleManager.CreateAsync(new IdentityRole("Admin")).Result;
-    }
-    
+    await RolesSeeder.SeedRolesAsync(services);
 }
 
+
 app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 
 app.UseRouting();
