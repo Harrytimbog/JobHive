@@ -1,5 +1,7 @@
 using JobHive.Constants;
 using JobHive.Data;
+using JobHive.Models;
+using JobHive.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +20,8 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddScoped<IRepository<JobPosting>, JobPostingRepository>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
