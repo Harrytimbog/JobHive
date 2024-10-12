@@ -1,5 +1,6 @@
 ﻿using JobHive.Data;
 using JobHive.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace JobHive.Repositories
 {
@@ -9,31 +10,50 @@ namespace JobHive.Repositories
         private readonly ApplicationDbContext _context;
         public JobPostingRepository(ApplicationDbContext context)
         {
-            _context = context
+            _context = context;
         }
-        public Task<JobPosting> AddAsync(JobPosting entity)
+        public async Task<JobPosting> AddAsync(JobPosting entity)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<JobPosting> DeleteAsync(int id)
-        {
-            throw new NotImplementedException();
+            await _context.JobPostings.AddAsync(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
 
-        public Task<IEnumerable<JobPosting>> GetAllAsync()
+        public async Task<JobPosting> DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            var jobPosting = await _context.JobPostings.FindAsync(id);
+            if (jobPosting == null)
+            {
+                throw new KeyNotFoundException();
+            }
+
+            _context.JobPostings.Remove(jobPosting);
+            await _context.SaveChangesAsync();
+            return jobPosting;
         }
 
-        public Task<JobPosting> GetByIdAsync(int id)
+        public async Task<IEnumerable<JobPosting>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await  _context.JobPostings.ToListAsync();
         }
 
-        public Task<JobPosting> UpdateAsync(JobPosting entity)
+        public async Task<JobPosting> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var jobPosting = await _context.JobPostings.FindAsync(id);
+            if (jobPosting == null)
+            {
+                throw new KeyNotFoundException();
+            }
+
+            return jobPosting;
+
+        }
+
+        public async Task<JobPosting> UpdateAsync(JobPosting entity)
+        {
+            _context.JobPostings.Update(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
     }
 }
