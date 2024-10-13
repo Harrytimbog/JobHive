@@ -50,5 +50,45 @@ namespace JobHive.Tests
             Assert.NotNull(result);
             Assert.Equal(jobPosting.Title, result.Title);
         }
+
+        [Fact]
+        public async Task GetByIdAsync_ShouldReturnJobPosting()
+        {
+            // Arrange: Set up in-memory database and repository
+            var db = CreateDbContext();
+            var jobPostingRepository = new JobPostingRepository(db);
+
+            // Create a new job posting
+            var jobPosting = new JobPosting
+            {
+                Title = "Data Analyst",
+                Description = "Analyze Data",
+                Location = "Abuja",
+                Company = "Andela",
+                UserId = "2",
+                User = new IdentityUser { Id = "2", UserName = "botuser" } // Set required User property
+            };
+
+            await db.JobPostings.AddAsync(jobPosting);
+            await db.SaveChangesAsync();
+
+            var result = await jobPostingRepository.GetByIdAsync(jobPosting.Id);
+
+            Assert.NotNull(result);
+            Assert.Equal(jobPosting.Title, result.Title);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_ShouldThrowKeyNotFoundException()
+        {
+            // Arrange: Set up in-memory database and repository
+            var db = CreateDbContext();
+            var jobPostingRepository = new JobPostingRepository(db);
+
+            // Act and Assert: Verify that a KeyNotFoundException is thrown
+            await Assert.ThrowsAsync<KeyNotFoundException>(
+                () => jobPostingRepository.GetByIdAsync(999)
+            );
+        }
     }
 }

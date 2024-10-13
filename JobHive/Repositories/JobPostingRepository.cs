@@ -46,7 +46,6 @@ namespace JobHive.Repositories
             }
 
             return jobPosting;
-
         }
 
         public async Task<JobPosting> UpdateAsync(JobPosting entity)
