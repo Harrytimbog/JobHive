@@ -37,6 +37,8 @@ namespace JobHive.Tests
             await _db.DisposeAsync();
         }
 
+        // Test for AddAsync method
+
         [Fact]
         public async Task AddAsync_ShouldAddJobPosting()
         {
@@ -62,6 +64,8 @@ namespace JobHive.Tests
             Assert.NotNull(result);
             Assert.Equal(jobPosting.Title, result.Title);
         }
+
+        // Test for GetByIdAsync method
 
         [Fact]
         public async Task GetByIdAsync_ShouldReturnJobPosting()
@@ -100,6 +104,8 @@ namespace JobHive.Tests
                 () => jobPostingRepository.GetByIdAsync(999)
             );
         }
+
+        // Test for GetAllAsync method
 
         [Fact]
         public async Task GetAllAsync_ShouldReturnAllJobPostings()
@@ -143,6 +149,7 @@ namespace JobHive.Tests
             );
         }
 
+        // Test for UpdateAsync method
 
         [Fact]
         public async Task UpdateAsync_ShouldUpdateJobPosting()
@@ -174,6 +181,34 @@ namespace JobHive.Tests
             Assert.NotNull(result);
             Assert.Equal(jobPosting.Title, result.Title);
             Assert.Equal(jobPosting.Description, result.Description);
+        }
+
+        // Test for DeleteAsync method
+
+        [Fact]
+        public async Task DeleteAsync_ShouldDeleteJobPosting()
+        {
+            // Arrange: Set up repository and add a job posting
+            var jobPostingRepository = new JobPostingRepository(_db);
+            var jobPosting = new JobPosting
+            {
+                Title = "Backend Developer",
+                Description = "Develop software",
+                Location = "Accra",
+                Company = "Andela",
+                UserId = "1",
+                User = new IdentityUser { Id = "1", UserName = "testuser" }
+            };
+
+            await _db.JobPostings.AddAsync(jobPosting);
+            await _db.SaveChangesAsync();
+
+            // Act: Delete the job posting
+            await jobPostingRepository.DeleteAsync(jobPosting.Id);
+
+            // Assert: Verify that the job posting was deleted
+            var result = await _db.JobPostings.FindAsync(jobPosting.Id);
+            Assert.Null(result);
         }
     }
 }
