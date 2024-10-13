@@ -3,39 +3,35 @@ using JobHive.Models;
 using JobHive.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Xunit;
 using System.Threading.Tasks;
 
 namespace JobHive.Tests
 {
-    internal class JobPostingRepositoryTests
+    public class JobPostingRepositoryTests
     {
-        // Only a public class can be tested
-
-        public readonly DbContextOptions<ApplicationDbContext> _options;
+        private readonly DbContextOptions<ApplicationDbContext> _options;
 
         public JobPostingRepositoryTests()
         {
+            // Configure in-memory database options
             _options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase("JobPostingDb")
+                .UseInMemoryDatabase(databaseName: "JobPostingDb")
                 .Options;
         }
 
-        // creating an instance of the ApplicationDbContext
+        // Helper method to create a new ApplicationDbContext instance
         private ApplicationDbContext CreateDbContext() => new ApplicationDbContext(_options);
 
-        // Test for Add JobPosting Async
+        // Test for AddAsync method in JobPostingRepository
+        [Fact]  // xUnit Fact attribute for test methods
         public async Task AddAsync_ShouldAddJobPosting()
         {
-            // db context
+            // Arrange: Set up in-memory database and repository
             var db = CreateDbContext();
-            // job posting repository
             var jobPostingRepository = new JobPostingRepository(db);
-            // job posting
 
+            // Create a new job posting
             var jobPosting = new JobPosting
             {
                 Title = "Software Developer",
@@ -43,15 +39,14 @@ namespace JobHive.Tests
                 Location = "Lagos",
                 Company = "Andela",
                 UserId = "1",
-                User = new IdentityUser { Id = "1", UserName = "testuser" } // Set the required User property
+                User = new IdentityUser { Id = "1", UserName = "testuser" } // Set required User property
             };
 
-            // expected job posting created
+            // Act: Add the job posting to the repository
             await jobPostingRepository.AddAsync(jobPosting);
-            // result job posting created
 
-            var result = db.JobPostings.FirstOrDefault(j => j.Title == "Software Developer");
-            // assert
+            // Assert: Verify that the job posting was added
+            var result = await db.JobPostings.FirstOrDefaultAsync(j => j.Title == "Software Developer");
             Assert.NotNull(result);
             Assert.Equal(jobPosting.Title, result.Title);
         }
