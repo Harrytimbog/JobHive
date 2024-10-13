@@ -136,10 +136,44 @@ namespace JobHive.Tests
             // Assert: Verify that all job postings are returned
             Assert.NotNull(result);
             Assert.Equal(2, result.Count());
+            Assert.True(result.Count() >= 2);  // Ensure at least 2 job postings are returned
             Assert.Collection(result,
                 j => Assert.Equal(jobPosting1.Title, j.Title),
                 j => Assert.Equal(jobPosting2.Title, j.Title)
             );
+        }
+
+
+        [Fact]
+        public async Task UpdateAsync_ShouldUpdateJobPosting()
+        {
+            // Arrange: Set up repository and add a job posting
+            var jobPostingRepository = new JobPostingRepository(_db);
+            var jobPosting = new JobPosting
+            {
+                Title = "Crime Analyst",
+                Description = "Analyze Crime",
+                Location = "Makurdi",
+                Company = "Andela",
+                UserId = "2",
+                User = new IdentityUser { Id = "2", UserName = "botuser" }
+            };
+
+            await _db.JobPostings.AddAsync(jobPosting);
+            await _db.SaveChangesAsync();
+
+            // Update the job posting
+            jobPosting.Title = "Data Scientist";
+            jobPosting.Description = "Analyze Data";
+
+            // Act: Update the job posting
+            await jobPostingRepository.UpdateAsync(jobPosting);
+
+            // Assert: Verify that the job posting was updated
+            var result = await _db.JobPostings.FindAsync(jobPosting.Id);
+            Assert.NotNull(result);
+            Assert.Equal(jobPosting.Title, result.Title);
+            Assert.Equal(jobPosting.Description, result.Description);
         }
     }
 }
