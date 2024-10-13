@@ -8,28 +8,40 @@ using System.Threading.Tasks;
 
 namespace JobHive.Tests
 {
-    public class JobPostingRepositoryTests
+    public class JobPostingRepositoryTests : IAsyncLifetime
     {
         private readonly DbContextOptions<ApplicationDbContext> _options;
+        private ApplicationDbContext _db;
 
         public JobPostingRepositoryTests()
         {
-            // Configure in-memory database options
+            // Configure in-memory database options with a unique database name
             _options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: "JobPostingDb")
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())  // Unique DB for each test class
                 .Options;
         }
 
         // Helper method to create a new ApplicationDbContext instance
         private ApplicationDbContext CreateDbContext() => new ApplicationDbContext(_options);
 
-        // Test for AddAsync method in JobPostingRepository
-        [Fact]  // xUnit Fact attribute for test methods
+        // Initialize DB Context before each test
+        public async Task InitializeAsync()
+        {
+            _db = CreateDbContext();
+        }
+
+        // Dispose DB Context after each test
+        public async Task DisposeAsync()
+        {
+            await _db.Database.EnsureDeletedAsync();  // Clean up after tests
+            await _db.DisposeAsync();
+        }
+
+        [Fact]
         public async Task AddAsync_ShouldAddJobPosting()
         {
-            // Arrange: Set up in-memory database and repository
-            var db = CreateDbContext();
-            var jobPostingRepository = new JobPostingRepository(db);
+            // Arrange: Set up repository
+            var jobPostingRepository = new JobPostingRepository(_db);
 
             // Create a new job posting
             var jobPosting = new JobPosting
@@ -39,14 +51,14 @@ namespace JobHive.Tests
                 Location = "Lagos",
                 Company = "Andela",
                 UserId = "1",
-                User = new IdentityUser { Id = "1", UserName = "testuser" } // Set required User property
+                User = new IdentityUser { Id = "1", UserName = "testuser" }
             };
 
             // Act: Add the job posting to the repository
             await jobPostingRepository.AddAsync(jobPosting);
 
             // Assert: Verify that the job posting was added
-            var result = await db.JobPostings.FirstOrDefaultAsync(j => j.Title == "Software Developer");
+            var result = await _db.JobPostings.FirstOrDefaultAsync(j => j.Title == "Software Developer");
             Assert.NotNull(result);
             Assert.Equal(jobPosting.Title, result.Title);
         }
@@ -54,11 +66,8 @@ namespace JobHive.Tests
         [Fact]
         public async Task GetByIdAsync_ShouldReturnJobPosting()
         {
-            // Arrange: Set up in-memory database and repository
-            var db = CreateDbContext();
-            var jobPostingRepository = new JobPostingRepository(db);
-
-            // Create a new job posting
+            // Arrange: Set up repository and add a job posting
+            var jobPostingRepository = new JobPostingRepository(_db);
             var jobPosting = new JobPosting
             {
                 Title = "Data Analyst",
@@ -66,14 +75,16 @@ namespace JobHive.Tests
                 Location = "Abuja",
                 Company = "Andela",
                 UserId = "2",
-                User = new IdentityUser { Id = "2", UserName = "botuser" } // Set required User property
+                User = new IdentityUser { Id = "2", UserName = "botuser" }
             };
 
-            await db.JobPostings.AddAsync(jobPosting);
-            await db.SaveChangesAsync();
+            await _db.JobPostings.AddAsync(jobPosting);
+            await _db.SaveChangesAsync();
 
+            // Act: Retrieve the job posting by ID
             var result = await jobPostingRepository.GetByIdAsync(jobPosting.Id);
 
+            // Assert: Verify that the correct job posting was returned
             Assert.NotNull(result);
             Assert.Equal(jobPosting.Title, result.Title);
         }
@@ -81,13 +92,53 @@ namespace JobHive.Tests
         [Fact]
         public async Task GetByIdAsync_ShouldThrowKeyNotFoundException()
         {
-            // Arrange: Set up in-memory database and repository
-            var db = CreateDbContext();
-            var jobPostingRepository = new JobPostingRepository(db);
+            // Arrange: Set up repository
+            var jobPostingRepository = new JobPostingRepository(_db);
 
             // Act and Assert: Verify that a KeyNotFoundException is thrown
             await Assert.ThrowsAsync<KeyNotFoundException>(
                 () => jobPostingRepository.GetByIdAsync(999)
+            );
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnAllJobPostings()
+        {
+            // Arrange: Set up repository and add multiple job postings
+            var jobPostingRepository = new JobPostingRepository(_db);
+
+            var jobPosting1 = new JobPosting
+            {
+                Title = "Cyber Security System Analyst",
+                Description = "Analyze software security",
+                Location = "Calabar",
+                Company = "Andela",
+                UserId = "1",
+                User = new IdentityUser { Id = "1", UserName = "testuser" }
+            };
+
+            var jobPosting2 = new JobPosting
+            {
+                Title = "Business Analyst",
+                Description = "Business Data",
+                Location = "Kano",
+                Company = "Andela",
+                UserId = "2",
+                User = new IdentityUser { Id = "2", UserName = "botuser" }
+            };
+
+            await _db.JobPostings.AddRangeAsync(jobPosting1, jobPosting2);
+            await _db.SaveChangesAsync();
+
+            // Act: Retrieve all job postings
+            var result = await jobPostingRepository.GetAllAsync();
+
+            // Assert: Verify that all job postings are returned
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count());
+            Assert.Collection(result,
+                j => Assert.Equal(jobPosting1.Title, j.Title),
+                j => Assert.Equal(jobPosting2.Title, j.Title)
             );
         }
     }
