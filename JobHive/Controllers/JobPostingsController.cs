@@ -1,5 +1,6 @@
 ﻿using JobHive.Models;
 using JobHive.Repositories;
+using JobHive.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,15 +34,30 @@ namespace JobHive.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(JobPosting jobPosting)
+        public async Task<IActionResult> Create(JobPostingViewModel jobPostingVm)
         {
             if (ModelState.IsValid)
             {
-                jobPosting.UserId = _userManager.GetUserId(User);
+                // Get the current user
+                var userId = _userManager.GetUserId(User);
+                var user = await _userManager.FindByIdAsync(userId);
+
+                var jobPosting = new JobPosting
+                {
+                    Title = jobPostingVm.Title,
+                    Description = jobPostingVm.Description,
+                    Company = jobPostingVm.Company,
+                    Location = jobPostingVm.Location,
+                    UserId = userId,
+                    User = user  // Assign the User property here
+                };
+
                 await _jobPostingRepository.AddAsync(jobPosting);
+
+                return RedirectToAction(nameof(Index));
             }
 
-            return RedirectToAction(nameof(Index));
+            return View(jobPostingVm); // If the model state is invalid, return the view with the model
         }
     }
 }
