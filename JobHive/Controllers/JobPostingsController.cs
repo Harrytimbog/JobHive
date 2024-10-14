@@ -50,7 +50,7 @@ namespace JobHive.Controllers
                     Location = jobPostingVm.Location,
                     UserId = userId,
                     User = user  // Assign the User property here
-                };
+                }; 
 
                 await _jobPostingRepository.AddAsync(jobPosting);
 
