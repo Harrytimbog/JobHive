@@ -18,7 +18,16 @@ namespace JobHive.Controllers
             _jobPostingRepository = jobRepository;
             _userManager = userManager;
         }
-        public IActionResult Index()
+
+        // Index Action
+        public async Task<IActionResult> Index()
+        {
+            var jobPostings = await _jobPostingRepository.GetAllAsync();
+            return View(jobPostings);
+        }
+
+        // Create Action
+        public IActionResult Create()
         {
             return View();
         }
