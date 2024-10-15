@@ -1,11 +1,13 @@
 ﻿using JobHive.Models;
 using JobHive.Repositories;
 using JobHive.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobHive.Controllers
 {
+    [Authorize]
     public class JobPostingsController : Controller
     {
 
@@ -21,6 +23,7 @@ namespace JobHive.Controllers
         }
 
         // Index Action
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
             var jobPostings = await _jobPostingRepository.GetAllAsync();
@@ -28,6 +31,7 @@ namespace JobHive.Controllers
         }
 
         // Create Action
+        [Authorize(Roles ="Admin, Employer")]
         public IActionResult Create()
         {
             return View();
