@@ -63,5 +63,13 @@ namespace JobHive.Controllers
 
             return View(jobPostingVm); // If the model state is invalid, return the view with the model
         }
+
+        [HttpDelete]
+        [Authorize(Roles = "Admin, Employer")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _jobPostingRepository.DeleteAsync(id);
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
