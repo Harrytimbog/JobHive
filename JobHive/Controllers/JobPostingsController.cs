@@ -27,8 +27,17 @@ namespace JobHive.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
-            var jobPostings = await _jobPostingRepository.GetAllAsync();
-            return View(jobPostings);
+            var allJobPostings = await _jobPostingRepository.GetAllAsync();
+            
+            // Filter job postings for employers
+            if(User.IsInRole(Roles.Employer))
+            {
+                var userId = _userManager.GetUserId(User);
+                var filteredJobPostings = allJobPostings.Where(jp => jp.UserId == userId );
+                return View(filteredJobPostings);
+            }
+
+            return View(allJobPostings);
         }
 
         // Create Action
@@ -91,5 +100,6 @@ namespace JobHive.Controllers
             await _jobPostingRepository.DeleteAsync(id);
             return Ok();
         }
+
     }
 }
