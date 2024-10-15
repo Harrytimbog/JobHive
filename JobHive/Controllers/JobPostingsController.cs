@@ -1,6 +1,7 @@
 ﻿using JobHive.Models;
 using JobHive.Repositories;
 using JobHive.ViewModels;
+using JobHive.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -69,8 +70,26 @@ namespace JobHive.Controllers
         [Authorize(Roles = "Admin, Employer")]
         public async Task<IActionResult> Delete(int id)
         {
+            // find job posting
+            var jobPosting = await _jobPostingRepository.GetByIdAsync(id);
+
+            if(jobPosting == null)
+            {
+                return NotFound();
+            }
+
+            // find job posting creator
+            var userId = _userManager.GetUserId(User);
+
+            // check if the user is the creator of the job posting or an admin
+            if (User.IsInRole(Roles.Admin) == false && jobPosting.UserId != userId)
+            {
+                return Forbid();
+            }
+
+            // delete the job posting
             await _jobPostingRepository.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
+            return Ok();
         }
     }
 }
